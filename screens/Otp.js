@@ -40,30 +40,33 @@ const Otp = () => {
 
     return (
         <View style={styles.container}>
+            <Text style={styles.title}>Enter Your Phone Number</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Phone Number"
+                onChangeText={setPhoneNumber}
+                keyboardType="phone-pad"
+            />
+            <TouchableOpacity style={styles.button} onPress={sendVerification}>
+                <Text style={styles.buttonText}>Send Verification Code</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.title}>Enter Verification Code</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Verification Code"
+                onChangeText={setCode}
+                keyboardType="number-pad"
+            />
+            <TouchableOpacity style={styles.button} onPress={confirmCode}>
+                <Text style={styles.buttonText}>Confirm Code</Text>
+            </TouchableOpacity>
+
             <FirebaseRecaptchaVerifierModal
                 ref={recaptchaVerifier}
                 firebaseConfig={firebase.app().options}
             />
-            <Text style={styles.otpText}>OTP</Text>
-            <TextInput
-                placeholder='Phone Number With Country Code'
-                onChangeText={setPhoneNumber}
-                keyboardType='phone-pad'
-                autoCompleteType='tel'
-                style={styles.textInput}
-            />
-            <TouchableOpacity style={styles.sendVerification} onPress={sendVerification} >
-                <Text style={styles.buttonText}>Send Verification</Text>
-            </TouchableOpacity>
-            <TextInput
-                placeholder='Enter Verification Code'
-                onChangeText={setCode}
-                keyboardType='number-pad'
-                style={styles.textInput}
-            />
-            <TouchableOpacity style={styles.sendCode} onPress={confirmCode} >
-                <Text style={styles.buttonText}>Confirm Verification</Text>
-            </TouchableOpacity>
+
         </View>
     );
 };
@@ -77,36 +80,27 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 20,
     },
-    otpText: {
-        fontSize: 24,
+    title: {
+        fontSize: 20,
         fontWeight: 'bold',
-        marginBottom: 20,
+        marginBottom: 10,
     },
-    textInput: {
+    input: {
+        width: '80%',
+        height: 40,
+        borderColor: 'gray',
         borderWidth: 1,
-        borderColor: '#ccc',
         borderRadius: 5,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+    },
+    button: {
+        backgroundColor: 'blue',
         padding: 10,
-        marginBottom: 10,
-        width: '100%',
-    },
-    sendVerification: {
-        backgroundColor: '#007bff',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
         borderRadius: 5,
-        marginBottom: 10,
-    },
-    sendCode: {
-        backgroundColor: '#28a745',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 5,
-        marginBottom: 10,
     },
     buttonText: {
-        color: '#fff',
-        textAlign: 'center',
+        color: 'white',
         fontWeight: 'bold',
     },
 });

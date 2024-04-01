@@ -69,7 +69,7 @@ const ControlScreen = ({ route }) => {
 
     const [deviceStatus, setDeviceStatus] = useState(false);
 
-    const [showModal, setShowModal] = useState(true);
+    const [showModal, setShowModal] = useState(false);
 
     const toggleModal = () => {
         setShowModal(!showModal);
