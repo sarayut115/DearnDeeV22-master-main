@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, FlatList, ScrollView, Modal } from "react-native";
 import Slider from '@react-native-community/slider';
 import { Image } from "expo-image";
@@ -11,36 +11,11 @@ import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Icon } from "react-native-elements";
 import { FontAwesome } from '@expo/vector-icons';
-
-
-// import MQTT from 'react-native-mqtt';
-
-
+import { useFocusEffect } from '@react-navigation/native';
 
 const ControlScreen = ({ route }) => {
 
-    // // MQTT client configuration
-    // const client = new MQTT.Client('34.73.215.67', 1883, 'clientId');
-
-    // // Connect to the MQTT broker
-    // client.connect({ onSuccess: onConnect });
-
-    // // MQTT connection success callback
-    // function onConnect() {
-    //     console.log('Connected to MQTT broker');
-    // }
-
-    // // Function to send MQTT message
-    // const sendMQTTMessage = (topic, message) => {
-    //     if (client.isConnected()) {
-    //         client.publish(topic, message);
-    //         console.log('Message sent:', message);
-    //     } else {
-    //         console.log('MQTT client is not connected');
-    //     }
-    // };
-
-    const { deviceId, deviceName } = route.params;
+    const { deviceId, deviceName, devicesAll } = route.params;
 
     const navigation = useNavigation();
     const auth = firebase.auth();
@@ -52,6 +27,12 @@ const ControlScreen = ({ route }) => {
     const [isVectorActive, setIsVectorActive] = useState(false);
     const [isMaterialSymbolshdrAutoActive, setIsMaterialSymbolshdrAutoActive] = useState(false);
     const [isRimentalHealthFillActive, setIsRimentalHealthFillActive] = useState(false);
+
+    const [userData, setUserData] = useState(null);
+    const [age, setAge] = useState(null); // เพิ่ม state เพื่อเก็บข้อมูลอายุ
+    const [gender, setGender] = useState("");
+    const [weight, setWeight] = useState("");
+    const [height, setHeight] = useState("");
 
     const [value, setValue] = useState(0);
 
@@ -71,6 +52,49 @@ const ControlScreen = ({ route }) => {
 
     const [showModal, setShowModal] = useState(false);
 
+
+    useFocusEffect(
+        React.useCallback(() => {
+            const unsubscribe = db.collection('users')
+                .doc(auth.currentUser.uid)
+                .onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        setUserData(userData);
+                        console.log(userData)
+                        setGender(userData.gender);
+                        setHeight(userData.height);
+                        setWeight(userData.weight)
+                        if (userData.dateOfBirth) {
+                            calculateAge(userData.dateOfBirth);
+                        }
+                    } else {
+                        console.log('No such document!');
+                    }
+                });
+
+            // Cleanup function
+            return () => {
+                unsubscribe();
+            };
+        }, [])
+    );
+
+    const calculateAge = (dateOfBirth) => {
+        const birthDate = new Date(dateOfBirth.seconds * 1000);
+        const currentDate = new Date();
+        // คำนวณอายุโดยลบวันเกิดจากวันปัจจุบัน
+        let age = currentDate.getFullYear() - birthDate.getFullYear();
+        // ตรวจสอบว่าวันเกิดผ่านไปแล้วหรือยัง
+        const currentMonth = currentDate.getMonth() + 1;
+        const birthMonth = birthDate.getMonth() + 1;
+        if (currentMonth < birthMonth || (currentMonth === birthMonth && currentDate.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        // เซ็ตค่าอายุใน state
+        setAge(age);
+    };
+
     const toggleModal = () => {
         setShowModal(!showModal);
     };
@@ -88,10 +112,12 @@ const ControlScreen = ({ route }) => {
                     if (value === 1) {
                         setDeviceStatus(true);
                         setShowModal(false)
+
                     } else if (value === 0) {
                         setDeviceStatus(false);
                         setShowModal(true)
                     }
+
                 });
             } catch (error) {
                 console.error('Error fetching device status:', error);
@@ -192,26 +218,6 @@ const ControlScreen = ({ route }) => {
     }, [isOn]);
 
 
-
-    // const handleVectorPress = () => {
-    //     setIsVectorActive(true);
-    //     setIsRimentalHealthFillActive(false);
-    //     setIsMaterialSymbolshdrAutoActive(false);
-    // };
-
-    // const handleRimentalHealthFillPress = () => {
-    //     setIsVectorActive(false);
-    //     setIsRimentalHealthFillActive(true);
-    //     setIsMaterialSymbolshdrAutoActive(false);
-    // };
-
-    // const handleMaterialSymbolshdrAutoPress = () => {
-    //     setIsVectorActive(false);
-    //     setIsRimentalHealthFillActive(false);
-    //     setIsMaterialSymbolshdrAutoActive(true);
-    // };
-
-
     // โหลดค่าเริ่มต้นของ isOn จาก AsyncStorage
     useEffect(() => {
         const loadIsOn = async () => {
@@ -243,19 +249,6 @@ const ControlScreen = ({ route }) => {
     }, [isOn]);
 
 
-    // const handleVectorPress = async () => {
-    //     setIsVectorActive(true);
-    //     setIsRimentalHealthFillActive(false);
-    //     setIsMaterialSymbolshdrAutoActive(false);
-    //     try {
-    //         await AsyncStorage.setItem('isVectorActive', 'true');
-    //         await AsyncStorage.setItem('isRimentalHealthFillActive', 'false');
-    //         await AsyncStorage.setItem('isMaterialSymbolshdrAutoActive', 'false');
-    //     } catch (error) {
-    //         console.error('Error saving button state to AsyncStorage:', error);
-    //     }
-    // };
-
     const handleVectorPress = async () => {
         setIsVectorActive(true);
         setIsRimentalHealthFillActive(false);
@@ -277,6 +270,7 @@ const ControlScreen = ({ route }) => {
         realtimeDB.ref('test/frequency').set(20); // อัปเดต 'test/frequency' เป็น 20
         realtimeDB.ref('test/pluseup').set(500);
         realtimeDB.ref('test/rampup').set(5);
+        realtimeDB.ref('test/Mode').set(1);
     };
 
 
@@ -291,7 +285,32 @@ const ControlScreen = ({ route }) => {
         } catch (error) {
             console.error('Error saving button state to AsyncStorage:', error);
         }
+        realtimeDB.ref('test/Mode').set(3);
     };
+
+    // const handleMaterialSymbolshdrAutoPress = async () => {
+    //     setIsVectorActive(false);
+    //     setIsRimentalHealthFillActive(false);
+    //     setIsMaterialSymbolshdrAutoActive(true);
+    //     try {
+    //         await AsyncStorage.setItem('isVectorActive', 'false');
+    //         await AsyncStorage.setItem('isRimentalHealthFillActive', 'false');
+    //         await AsyncStorage.setItem('isMaterialSymbolshdrAutoActive', 'true');
+    //     } catch (error) {
+    //         console.error('Error saving button state to AsyncStorage:', error);
+    //     }
+    //     setValue(3);
+    //     setSliderValue(50);
+    //     setSliderValuePulse(500);
+    //     setValueRamp(5);
+
+    //     // Update Firebase Realtime Database
+    //     realtimeDB.ref('test/intensity').set(3); // อัปเดต 'test/intensity' เป็น 1
+    //     realtimeDB.ref('test/frequency').set(50); // อัปเดต 'test/frequency' เป็น 20
+    //     realtimeDB.ref('test/pluseup').set(500);
+    //     realtimeDB.ref('test/rampup').set(5);
+    //     realtimeDB.ref('test/Mode').set(2);
+    // };
 
     const handleMaterialSymbolshdrAutoPress = async () => {
         setIsVectorActive(false);
@@ -304,17 +323,77 @@ const ControlScreen = ({ route }) => {
         } catch (error) {
             console.error('Error saving button state to AsyncStorage:', error);
         }
-        setValue(3);
-        setSliderValue(50);
-        setSliderValuePulse(500);
-        setValueRamp(5);
 
+        let intensityLevel = 3; 
+        let frequency = 20; 
+        let pulseup = 500; 
+        let rampup = 5; 
+
+        // ตรวจสอบเพศและอายุของผู้ใช้
+        if (gender === 'ชาย' && age >= 18 && age <= 50) {
+            intensityLevel = 4; 
+        } else if (gender === 'หญิง' && age >= 18 && age <= 50) {
+            intensityLevel = 3; 
+        }
+
+        
+        const bmi = weight / ((height / 100) * (height / 100));
+
+        
+        if (age <= 12) {
+            // ไม่ได้นำอายุมาคำนวณ BMI ในกรณีนี้ เพราะความแตกต่างของโครงสร้างร่างกายของเด็ก
+            // จะมีการปรับค่าพารามิเตอร์ตามอายุและพัฒนาการแต่ละช่วงโดยไม่ใช้ BMI
+        } else if (age >= 13) {
+            if (bmi < 18.5) {
+                // น้ำหนักน้อยกว่าเกณฑ์มาตรฐาน (ผอม)
+                
+                intensityLevel = 2; 
+                frequency = 30; 
+                pulseup = 300;
+                rampup = 3; 
+            } else if (bmi >= 18.5 && bmi < 25) {
+                // น้ำหนักอยู่ในเกณฑ์มาตรฐาน (ปกติ)
+                // ปรับค่าพารามิเตอร์ตามความต้องการของผู้ใช้
+
+                
+                intensityLevel = 3; 
+                frequency = 30;
+                pulseup = 400; 
+                rampup = 4;
+            } else if (bmi >= 25 && bmi < 30) {
+                // น้ำหนักเกินเกณฑ์มาตรฐาน (ท้วม)
+                // ปรับค่าพารามิเตอร์ตามความต้องการของผู้ใช้
+
+                // เช่น ปรับความแรง, ความถี่, Pulseup, Rampup ตามเงื่อนไขที่ต้องการ
+                intensityLevel = 4; 
+                frequency = 25;
+                pulseup = 300;
+                rampup = 5; 
+            } else if (bmi >= 30) {
+                // น้ำหนักอยู่ในเกณฑ์อ้วน
+                // ปรับค่าพารามิเตอร์ตามความต้องการของผู้ใช้
+
+               
+                intensityLevel = 5; 
+                frequency = 20; 
+                pulseup = 200; 
+                rampup = 5; 
+            }
+        }
+
+
+        setValue(intensityLevel);
+        setSliderValue(frequency);
+        setSliderValuePulse(pulseup);
+        setValueRamp(rampup);
         // Update Firebase Realtime Database
-        realtimeDB.ref('test/intensity').set(3); // อัปเดต 'test/intensity' เป็น 1
-        realtimeDB.ref('test/frequency').set(50); // อัปเดต 'test/frequency' เป็น 20
-        realtimeDB.ref('test/pluseup').set(500);
-        realtimeDB.ref('test/rampup').set(5);
+        realtimeDB.ref('test/intensity').set(intensityLevel); 
+        realtimeDB.ref('test/frequency').set(frequency); 
+        realtimeDB.ref('test/pluseup').set(pulseup); 
+        realtimeDB.ref('test/rampup').set(rampup); 
+        realtimeDB.ref('test/Mode').set(2);
     };
+
 
     // Load button state from AsyncStorage when component mounts
     useEffect(() => {
@@ -463,37 +542,6 @@ const ControlScreen = ({ route }) => {
     };
 
 
-    // const handlePressIsOnOff = async () => {
-    //     const newIsOn = !isOn;
-    //     setIsOn(newIsOn);
-    // };
-
-    // const handlePressIsOnOff = async () => {
-    //     const newIsOn = !isOn;
-    //     setIsOn(newIsOn);
-
-    //     try {
-    //         const userDocRef = db.collection('users').doc(auth.currentUser.uid);
-    //         const userDoc = await userDocRef.get();
-    //         const userData = userDoc.data();
-    //         if (userData && userData.devicesAll) {
-    //             const updatedDevicesAll = userData.devicesAll.map((d) => {
-    //                 if (d.id === deviceId) {
-    //                     // เพิ่มประวัติการใช้งานลงใน History
-    //                     const updatedHistory = d.History ? [...d.History, { isOn: newIsOn, timestamp: new Date() }] : [{ isOn: newIsOn, timestamp: new Date() }];
-    //                     return { ...d, History: updatedHistory };
-    //                 }
-    //                 return d;
-    //             });
-    //             await userDocRef.update({ devicesAll: updatedDevicesAll });
-    //             console.log("History updated successfully!");
-    //         }
-    //     } catch (error) {
-    //         console.error('Error updating history:', error);
-    //     }
-    // };
-
-
     const handlePressIsOnOff = async () => {
         const newIsOn = !isOn;
         setIsOn(newIsOn);
@@ -574,15 +622,6 @@ const ControlScreen = ({ route }) => {
                             source={require("../assets/group-9845.png")}
                         />
                     </TouchableOpacity>
-                    {/* <TouchableOpacity style={styles.backNavs1}
-                        onPress={() => navigation.navigate("SettingDevice",
-                            { deviceId: deviceId, deviceName: deviceName })}>
-                        <Image
-                            style={[styles.detailNavsIcon]}
-                            contentFit="cover"
-                            source={require("../assets/detailnavs.png")}
-                        />
-                    </TouchableOpacity> */}
 
                     <View style={styles.title}>
                         <Text style={[styles.text]}>
@@ -606,32 +645,6 @@ const ControlScreen = ({ route }) => {
                     <Text style={[styles.text1, styles.text1Typo]}>{isOn ? "ปิดใช้งาน" : "เปิดใช้งาน"}</Text>
                 </TouchableOpacity>
                 <View style={[styles.materialSymbolshdrAutoParent, styles.parentLayout]}>
-
-                    {/* <TouchableOpacity>
-                    <Image
-                        style={styles.vectorIcon}
-                        contentFit="cover"
-                        source={require("../assets/vector.png")}
-                    />
-                </TouchableOpacity>
-                <TouchableOpacity>
-                    <Image
-                        style={styles.rimentalHealthFillIcon}
-                        contentFit="cover"
-                        source={require("../assets/rimentalhealthfill.png")}
-                    />
-                </TouchableOpacity>
-                <TouchableOpacity>
-                    <Image
-                        style={styles.materialSymbolshdrAutoIcon}
-                        contentFit="cover"
-                        source={require("../assets/materialsymbolshdrauto.png")}
-                    />
-                </TouchableOpacity>
-
-                <Text style={[styles.text2, styles.textTypo]}>อัตโนมัติ</Text>
-                <Text style={[styles.text3, styles.textTypo]}>ทั่วไป</Text>
-                <Text style={styles.text4}>ปรับขั้นสูง</Text> */}
 
                     <TouchableOpacity
                         disabled={!isDeviceOn}
@@ -663,10 +676,6 @@ const ControlScreen = ({ route }) => {
                         />
                     </TouchableOpacity>
 
-
-                    {/* <Text style={[styles.text2, styles.textTypo, isMaterialSymbolshdrAutoActive && { color: '#A0A0A0' }]}>อัตโนมัติ</Text>
-                <Text style={[styles.text3, styles.textTypo, isVectorActive && { color: '#A0A0A0' }]}>ทั่วไป</Text>
-                <Text style={[styles.text4, isRimentalHealthFillActive && { color: '#A0A0A0' }]}>ปรับขั้นสูง</Text> */}
                     <Text style={[styles.text2, styles.textTypo, { color: isMaterialSymbolshdrAutoActive ? 'black' : '#A0A0A0' }]}>อัตโนมัติ {!isOn && <FontAwesome name="lock" size={18} />} </Text>
                     <Text style={[styles.text3, styles.textTypo, { color: isVectorActive ? 'black' : '#A0A0A0' }]}>ผ่อนคลาย {!isOn && <FontAwesome name="lock" size={18} />}</Text>
                     <Text style={[styles.text4, { color: isRimentalHealthFillActive ? 'black' : '#A0A0A0' }]}>กำหนดเอง {!isOn && <FontAwesome name="lock" size={18} />}</Text>
@@ -696,18 +705,7 @@ const ControlScreen = ({ route }) => {
 
                     </Text>
                     <Text style={styles.sliderValue}>{sliderValue}</Text>
-                    {/* <Slider
-                        style={styles.slider}
-                        disabled={!isDeviceOn}
-                        minimumValue={20}
-                        maximumValue={70}
-                        step={10} // เพิ่มค่าทีละ 10
-                        value={sliderValue}
-                        onValueChange={(value) => setSliderValue(value)}
-                        thumbTintColor="#3498db" // สีของจุดที่ใช้เลื่อน Slider
-                        minimumTrackTintColor="#3498db" // สีของเส้นเส้นสำหรับช่วงที่เลื่อนไปแล้ว
-                        maximumTrackTintColor="#A0A0A0" // สีของเส้นเส้นสำหรับช่วงที่ยังไม่ได้เลื่อนไป
-                    /> */}
+
                     <Slider
                         style={styles.slider}
                         disabled={!isDeviceOn || !isRimentalHealthFillActive} // ปิดใช้งานเมื่ออุปกรณ์ปิดหรือ isRimentalHealthFillActive เป็นเท็จ
@@ -936,7 +934,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 10,
         marginBottom: 30,
-        width:170
+        width: 170
     },
     offlineText: {
         color: 'red',
@@ -1458,7 +1456,7 @@ const styles = StyleSheet.create({
         height: "100%",
         textAlign: "left",
         color: Color.blackColor,
-        width: "100%",
+        width: 45,
         // paddingRight:10,
         // backgroundColor:'red'
     },

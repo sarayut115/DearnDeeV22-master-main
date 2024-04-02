@@ -55,6 +55,73 @@ const Safety = () => {
         }
     };
 
+    // const handleEmailVerification = async () => {
+    //     try {
+    //         // ให้แสดง Alert เพื่อยืนยันการส่งอีเมล
+    //         Alert.alert(
+    //             "ยืนยันการส่งอีเมลยืนยัน",
+    //             "คุณต้องการส่งอีเมลยืนยันไปยังอีเมลของคุณหรือไม่?",
+    //             [
+    //                 {
+    //                     text: "ยกเลิก",
+    //                     style: "cancel"
+    //                 },
+    //                 {
+    //                     text: "ยืนยัน",
+    //                     onPress: async () => {
+    //                         if (!email) {
+    //                             // ใส่โค้ดเพื่อให้ผู้ใช้ป้อนอีเมลเอง
+    //                             Alert.prompt(
+    //                                 "กรุณาป้อนอีเมลของคุณ",
+    //                                 "โปรดป้อนอีเมลของคุณเพื่อทำการส่ง",
+    //                                 [
+    //                                     {
+    //                                         text: "ยกเลิก",
+    //                                         style: "cancel"
+    //                                     },
+    //                                     {
+    //                                         text: "ส่ง",
+    //                                         onPress: async (enteredEmail) => {
+    //                                             if (enteredEmail) {
+    //                                                 setEmail(enteredEmail);
+    //                                                 await sendVerificationEmail(enteredEmail);
+    //                                             } else {
+    //                                                 alert("กรุณาป้อนอีเมลของคุณ");
+    //                                             }
+    //                                         }
+    //                                     }
+    //                                 ],
+    //                                 "plain-text",
+    //                                 ""
+    //                             );
+    //                         } else {
+    //                             // ทำการส่งอีเมลยืนยัน
+    //                             await sendVerificationEmail(email);
+    //                         }
+    //                     },
+    //                 },
+    //             ]
+    //         );
+    //     } catch (error) {
+    //         alert("เกิดข้อผิดพลาดในการส่งอีเมลยืนยัน");
+    //         console.error(error);
+    //     }
+    // };
+    
+    // const sendVerificationEmail = async (email) => {
+    //     try {
+    //         // ทำการส่งอีเมลยืนยัน
+    //         await auth.currentUser.sendEmailVerification();
+    //         alert("อีเมลยืนยันถูกส่งไปยังอีเมลของคุณแล้ว");
+    //         // รีเฟรชข้อมูลผู้ใช้เพื่ออัปเดตสถานะการยืนยันอีเมล
+    //         await auth.currentUser.reload();
+    //         setIsEmailVerified(false); // อัปเดตสถานะการยืนยันอีเมล
+    //     } catch (error) {
+    //         alert("เกิดข้อผิดพลาดในการส่งอีเมลยืนยัน");
+    //         console.error(error);
+    //     }
+    // };
+    
 
     const handlePasswordChange = () => {
         // Handle password change functionality here
@@ -73,6 +140,7 @@ const Safety = () => {
             console.error(error);
         }
     };
+    
 
     const confirmAccountDeletion = async () => {
         try {
@@ -128,14 +196,13 @@ const Safety = () => {
                     </View>
                 </TouchableOpacity>
 
+                <TouchableOpacity style={styles.button} onPress={handleFaceIDLogin}>
+                    <Text style={styles.buttonText}>เบอร์โทรศัพท์</Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity style={styles.button} onPress={handlePasswordChange}>
                     <Text style={styles.buttonText}>แก้ไขรหัสผ่าน</Text>
                 </TouchableOpacity>
-
-                {/* <TouchableOpacity style={styles.button} onPress={handleFaceIDLogin}>
-                    <Text style={styles.buttonText}>เข้าสู่ระบบด้วย Face ID</Text>
-                </TouchableOpacity> */}
-
                 {/* <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={handleAccountDeletion}>
                     <Text style={[styles.buttonText, styles.deleteButtonText]}>ลบบัญชีการใช้งาน</Text>
                 </TouchableOpacity> */}

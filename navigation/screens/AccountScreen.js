@@ -49,27 +49,28 @@ export default function AccountScreen({ }) {
 
     useFocusEffect(
         React.useCallback(() => {
-          const unsubscribe = db.collection('users')
-            .doc(auth.currentUser.uid)
-            .onSnapshot((doc) => {
-              if (doc.exists) {
-                const userData = doc.data();
-                setUserData(userData);
-                setGender(userData.gender);
-                if (userData.dateOfBirth) {
-                  calculateAge(userData.dateOfBirth);
-                }
-              } else {
-                console.log('No such document!');
-              }
-            });
-      
-          // Cleanup function
-          return () => {
-            unsubscribe();
-          };
+            const unsubscribe = db.collection('users')
+                .doc(auth.currentUser.uid)
+                .onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        setUserData(userData);
+                        console.log(userData)
+                        setGender(userData.gender);
+                        if (userData.dateOfBirth) {
+                            calculateAge(userData.dateOfBirth);
+                        }
+                    } else {
+                        console.log('No such document!');
+                    }
+                });
+
+            // Cleanup function
+            return () => {
+                unsubscribe();
+            };
         }, [])
-      );
+    );
 
 
     const calculateAge = (dateOfBirth) => {
@@ -153,11 +154,17 @@ export default function AccountScreen({ }) {
                         </View>
                     </View>
                     <View style={[styles.name, styles.namePosition]}>
-                        <Text style={[styles.maximusWalker, styles.text6Position]}>
+                        {/* <Text style={[styles.maximusWalker, styles.text6Position]}>
                             {userData.firstName} {userData.lastName}
                         </Text>
                         <Text style={[styles.loseAFat, styles.textTypo]}>
                             {userData.email}
+                        </Text> */}
+                        <Text style={[styles.maximusWalker, styles.text6Position]}>
+                            {userData.firstName ? userData.firstName : "คุณยังไม่กรอกชื่อและนามสกุล"} {userData.lastName ? userData.lastName : ""}
+                        </Text>
+                        <Text style={[styles.loseAFat, styles.textTypo]}>
+                            {userData.phoneNumber !== "-" ? userData.phoneNumber : userData.email}
                         </Text>
                     </View>
                     <Image
@@ -562,9 +569,9 @@ const styles = StyleSheet.create({
     },
     heightText: {
         left: 29,
-        width: 50,
+        width: 55,
         height: 44,
-        //backgroundColor:'red',
+        // backgroundColor:'red',
     },
     bgItem: {
         width: 102,

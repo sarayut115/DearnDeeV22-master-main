@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Text, StyleSheet, View, Pressable, TextInput, TouchableWithoutFeedback, TouchableOpacity, Keyboard  } from "react-native";
+import { Text, StyleSheet, View, Pressable, TextInput, TouchableWithoutFeedback, TouchableOpacity, Keyboard, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
@@ -35,7 +35,7 @@ const RegisterPage = () => {
 
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
-  
+
 
   // const onDateChange = (event, selectedDate) => {
   //   const currentDate = selectedDate || dateOfBirth;
@@ -74,11 +74,40 @@ const RegisterPage = () => {
   //   console.log(`Selected Gender: ${itemValue}`);
   // };
 
+  // const updateDBfirebase = async () => {
+  //   try {
+  //     const user = auth.currentUser;
+
+  //     if (user) {
+  //       // Update user profile in Firestore
+  //       await db.collection("users").doc(user.uid).update({
+  //         gender: gender,
+  //         dateOfBirth: dateOfBirth,
+  //         weight: weight,
+  //         height: height,
+  //       });
+
+  //       console.log("User profile updated successfully!");
+  //       navigation.navigate("MainContainer")
+  //     } else {
+  //       console.error("User not found");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating user profile:", error.message);
+  //   }
+  // };
+
   const updateDBfirebase = async () => {
     try {
       const user = auth.currentUser;
-
+  
       if (user) {
+        // ตรวจสอบว่ามีข้อมูลของทุกฟิลด์หรือไม่
+        if (!gender || !dateOfBirth || !weight || !height) {
+          Alert.alert("ข้อมูลไม่ครบถ้วน", "กรุณากรอกข้อมูลให้ครบทุกช่อง");
+          return;
+        }
+  
         // Update user profile in Firestore
         await db.collection("users").doc(user.uid).update({
           gender: gender,
@@ -86,7 +115,7 @@ const RegisterPage = () => {
           weight: weight,
           height: height,
         });
-
+  
         console.log("User profile updated successfully!");
         navigation.navigate("MainContainer")
       } else {
@@ -98,8 +127,12 @@ const RegisterPage = () => {
   };
 
 
+
   return (
-    <View style={styles.registerPage2}>
+    <Pressable style={styles.registerPage2} onPress={() => {
+      Keyboard.dismiss(); // เพิ่มนี้เพื่อให้คีย์บอร์ดหายไปเมื่อคลิกที่พื้นที่ว่างของหน้าจอ
+      // ต่อไปคุณสามารถเรียกฟังก์ชันที่คุณต้องการทำหลังจากนี้
+    }}>
       <View style={styles.profileText}>
         <Text style={styles.text}>ป้อนข้อมูลส่วนตัวของคุณ</Text>
         <Text style={styles.text1}>สำหรับการวิเคราะห์โหมดออโต้ เพื่อให้แม่นยำมากขึ้น!</Text>
@@ -413,7 +446,7 @@ const RegisterPage = () => {
           source={require("../assets/r-arm-3.png")}
         />
       </View>
-    </View>
+    </Pressable>
   );
 };
 

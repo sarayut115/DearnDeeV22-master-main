@@ -126,7 +126,7 @@ const PersonalInformationScreen = () => {
         );
     };
 
-    
+
     const showGenderChangePopup = () => {
         Alert.alert(
             "เปลี่ยนเพศ",
@@ -162,7 +162,7 @@ const PersonalInformationScreen = () => {
             { cancelable: true } // กำหนดให้สามารถยกเลิก Alert ได้
         );
     };
-    
+
 
     // useEffect(() => {
     //     const unsubscribe = db.collection('users')
@@ -199,13 +199,13 @@ const PersonalInformationScreen = () => {
                 if (doc.exists) {
                     const userData = doc.data();
                     setUserData(userData);
-                    setFirstName(userData.firstName);
-                    setLastName(userData.lastName);
-                    setEmail(userData.email);
-                    setGender(userData.gender);
-                    setWeight(userData.weight);
-                    setHeight(userData.height);
-    
+                    setFirstName(userData.firstName || ""); // ตรวจสอบค่าและให้ค่าเป็นค่าว่างหากไม่มีค่า
+                    setLastName(userData.lastName || ""); // ตรวจสอบค่าและให้ค่าเป็นค่าว่างหากไม่มีค่า
+                    setEmail(userData.email || ""); // ตรวจสอบค่าและให้ค่าเป็นค่าว่างหากไม่มีค่า
+                    setGender(userData.gender || ""); // ตรวจสอบค่าและให้ค่าเป็นค่าว่างหากไม่มีค่า
+                    setWeight(userData.weight || ""); // ตรวจสอบค่าและให้ค่าเป็นค่าว่างหากไม่มีค่า
+                    setHeight(userData.height || ""); // ตรวจสอบค่าและให้ค่าเป็นค่าว่างหากไม่มีค่า
+
                     // Check if dateOfBirth exists and is not null
                     if (userData.dateOfBirth) {
                         // Convert Firestore Timestamp to Date object
@@ -220,50 +220,50 @@ const PersonalInformationScreen = () => {
                     console.log('No such document!');
                 }
             });
-    
+        console.log(auth.currentUser.uid)
         // Cleanup function
         return () => {
             unsubscribe();
         };
     }, []);
-    
 
 
-// Function to update user data in Firebase
-const updateUserProfile = async () => {
-    try {
-        Alert.alert(
-            "ยืนยันการอัปเดตข้อมูลหรือไม่",
-            "",
-            [
-                {
-                    text: "ยกเลิก",
-                    onPress: () => console.log("ยกเลิกการอัปเดตข้อมูล"),
-                    style: "cancel"
-                },
-                {
-                    text: "ยืนยัน",
-                    onPress: async () => {
-                        await db.collection('users').doc(auth.currentUser.uid).update({
-                            firstName: firstName,
-                            lastName: lastName,
-                            email: email,
-                            gender: gender,
-                            weight: weight,
-                            height: height,
-                            dateOfBirth: dateOfBirth
-                        });
-                        Alert.alert('สำเร็จ', 'ข้อมูลโปรไฟล์ถูกอัพเดทเรียบร้อยแล้ว!!');
+
+    // Function to update user data in Firebase
+    const updateUserProfile = async () => {
+        try {
+            Alert.alert(
+                "ยืนยันการอัปเดตข้อมูลหรือไม่",
+                "",
+                [
+                    {
+                        text: "ยกเลิก",
+                        onPress: () => console.log("ยกเลิกการอัปเดตข้อมูล"),
+                        style: "cancel"
+                    },
+                    {
+                        text: "ยืนยัน",
+                        onPress: async () => {
+                            await db.collection('users').doc(auth.currentUser.uid).update({
+                                firstName: firstName,
+                                lastName: lastName,
+                                email: email,
+                                gender: gender,
+                                weight: weight,
+                                height: height,
+                                dateOfBirth: dateOfBirth
+                            });
+                            Alert.alert('สำเร็จ', 'ข้อมูลโปรไฟล์ถูกอัพเดทเรียบร้อยแล้ว!!');
+                        }
                     }
-                }
-            ],
-            { cancelable: true }
-        );
-    } catch (error) {
-        console.error('Error updating profile: ', error);
-        Alert.alert('Error', 'เกิดข้อผิดพลาดในการอัพเดทโปรไฟล์ กรุณาลองใหม่อีกครั้งในภายหลัง.');
-    }
-};
+                ],
+                { cancelable: true }
+            );
+        } catch (error) {
+            console.error('Error updating profile: ', error);
+            Alert.alert('Error', 'เกิดข้อผิดพลาดในการอัพเดทโปรไฟล์ กรุณาลองใหม่อีกครั้งในภายหลัง.');
+        }
+    };
 
 
 
@@ -612,7 +612,7 @@ const updateUserProfile = async () => {
                                     onChangeText={(text) => setHeight(text)}
                                 /> */}
 
-                                <Text 
+                                <Text
                                     style={[styles.yourLastname, styles.yourPosition2]}>
                                     ส่วนสูงของคุณ
                                 </Text>
@@ -911,7 +911,7 @@ const styles = StyleSheet.create({
         left: 1,
         top: -156,
         position: "absolute",
-        alignSelf:'center'
+        alignSelf: 'center'
     },
     profileText: {
         top: 356,
@@ -993,7 +993,7 @@ const styles = StyleSheet.create({
         height: 120,
         top: 50,
         position: "absolute",
-        alignSelf:'center'
+        alignSelf: 'center'
     },
     labelBgChild: {
         backgroundColor: Color.borderColor,

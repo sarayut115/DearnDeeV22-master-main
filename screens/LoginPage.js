@@ -176,7 +176,7 @@ const LoginPage = () => {
       <View style={styles.or}>
         <Text style={[styles.text2, styles.text2Layout]}>หรือ</Text>
       </View>
-      <TouchableOpacity style={[styles.loginSocialMedia, styles.groupChildLayout]} onPress={() => navigation.navigate("Otp")}>
+      <TouchableOpacity style={[styles.loginSocialMedia, styles.groupChildLayout]} onPress={() => navigation.navigate("OtpLogin")}>
         <View style={[styles.rectangleParent, styles.groupChildLayout]}>
           <View style={[styles.groupChild, styles.childLayout]} />
           <Image
@@ -185,7 +185,7 @@ const LoginPage = () => {
             source={require("../assets/sms.png")}
           />
           <Text style={[styles.google, styles.textFlexBox]}>
-            ดำเนินต่อด้วยระบบ SMS
+            เข้าสู่ระบบด้วย SMS
           </Text>
         </View>
       </TouchableOpacity>
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   google: {
     width: "69.95%",
     top: "22%",
-    left: "9.39%",
+    left: "16.39%",
     fontSize: FontSize.size_smi,
     color: Color.blackColor,
     fontFamily: FontFamily.textSmallTextRegular,

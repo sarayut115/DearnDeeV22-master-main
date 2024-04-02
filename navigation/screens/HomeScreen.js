@@ -394,7 +394,7 @@ const HomeScreen = () => {
 
             {devices.map(device => (
               <TouchableOpacity key={device.id} style={styles.deviceContainer}
-                onPress={() => navigation.navigate("ControlScreen", { deviceId: device.id, deviceName: device.name })}
+                onPress={() => navigation.navigate("ControlScreen", { deviceId: device.id, deviceName: device.name, devicesAll: devices})}
                 onLongPress={() => showRemoveDeviceAlert(device)}
               >
                 <View style={styles.deviceNameStatus}>

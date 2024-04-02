@@ -27,6 +27,8 @@ import ForgotPasswordAct from "./screens/ForgotPasswordAct";
 import NotificationScreen from "./LoggedIn/์NotificationScreen";
 import SettingDevice from "./LoggedIn/SettingDevice";
 import Otp from "./screens/Otp";
+import OtpLogin from "./screens/OtpLogin";
+import OtpSMS from "./screens/OtpSMS";
 // import LiquidFillGauge from "./compo/LiquidFillGauge";
 
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -71,6 +73,8 @@ const App = () => {
             />
           ) : null}
           <Stack.Screen name="WelcomeScreen" component={LoginPage} />
+          <Stack.Screen name="OtpSMS" component={OtpSMS} />
+          <Stack.Screen name="OtpLogin" component={OtpLogin} />
           <Stack.Screen name="Otp" component={Otp} />
           <Stack.Screen name="SettingDevice" component={SettingDevice} />
           <Stack.Screen name="NotificationScreen" component={NotificationScreen} />

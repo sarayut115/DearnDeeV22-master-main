@@ -15,6 +15,8 @@ const SetttingScreen = () => {
     const navigation = useNavigation();
 
     const auth = firebase.auth();
+    const email = auth.currentUser?.email
+    const phone = auth.currentUser?.phoneNumber
 
     const handleSignOut = () => {
         auth
@@ -39,7 +41,7 @@ const SetttingScreen = () => {
                 <Text
                     // onPress={() => navigation.navigate('Home')}
                     style={styles.emailText}>
-                    {auth.currentUser?.email}
+                    {email ? email : phone}
                 </Text>
                 <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
                     <LinearGradient
@@ -106,11 +108,11 @@ const styles = StyleSheet.create({
         // padding: 15,
         // borderRadius: 10,
     },
-    signOutText:{
-        color:'white',
+    signOutText: {
+        color: 'white',
         fontSize: 18,
-        alignSelf:'center'
-    
+        alignSelf: 'center'
+
     },
     emailText: {
         fontSize: 19,
@@ -121,7 +123,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         padding: 15,
     },
-    
+
 });
 
 export default SetttingScreen;

@@ -36,47 +36,83 @@ const RegisterPage1 = () => {
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
 
+  const [phoneNumber, setPhoneNumber] = useState("-");
+
   const [isChecked, setChecked] = useState(false);
 
-  // useEffect(() => {
-  //   const unsubscribe = auth.onAuthStateChanged(user => {
-  //     if (user) {
-  //       navigation.replace("RegisterPage")
-  //       console.log('Register สำเร็จ');
-
-  //     }
-  //   })
-  //   return unsubscribe
-  // }, [])
-
   // const handleSignUp = () => {
-  //   firebase.auth()
+  //   // ตรวจสอบว่า checkbox ถูกติ๊กหรือไม่
+  //   if (!isChecked) {
+  //     // ถ้าไม่ติ๊กให้แสดง Alert และหยุดการลงทะเบียน
+  //     Alert.alert('กรุณายอมรับนโยบายความเป็นส่วนตัวและข้อกำหนดการใช้งานของเรา');
+  //     return;
+  //   }
+  //   auth
   //     .createUserWithEmailAndPassword(email, password)
   //     .then(userCredentials => {
   //       const user = userCredentials.user;
+  //       // console.log('Registered with:', user.email);
+
+  //       // Add email to Realtime Database
+  //       // database.ref('emails').push({
+  //       //   email: email,
+  //       // });
+
+  //       // เพิ่มข้อมูลลง Firestore
+  //       db.collection("users").doc(user.uid).set({
+  //         firstName: firstName,
+  //         lastName: lastName,
+  //         email: email,
+  //         gender: gender,
+  //         dateOfBirth: dateOfBirth,
+  //         weight: weight,
+  //         height: height,
+  //         phoneNumber: phoneNumber,
+  //       })
+  //         .then(() => {
+  //           console.log('User data added to Firestore');
+  //         })
+  //         .catch(error => {
+  //           console.error('Error adding user data to Firestore:', error);
+  //         });
+
   //       console.log('Registered with:', user.email);
+  //       navigation.replace("RegisterPage")
   //     })
-  //     .catch(error => alert(error.message))
+  //     .catch(error => alert(error.message));
   // }
 
   const handleSignUp = () => {
-    // ตรวจสอบว่า checkbox ถูกติ๊กหรือไม่
+    // ตรวจสอบชื่อและนามสกุลว่าไม่ใช่ค่าว่าง
+    if (firstName.trim() === "" || lastName.trim() === "") {
+      Alert.alert('กรุณากรอกชื่อและนามสกุล');
+      return;
+    }
+
+    // ตรวจสอบรูปแบบของอีเมล
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('กรุณากรอกอีเมลที่ถูกต้อง');
+      return;
+    }
+
+    // ตรวจสอบความยาวของรหัสผ่าน
+    if (password.length < 6) {
+      Alert.alert('รหัสผ่านควรมีความยาวอย่างน้อย 6 ตัวอักษร');
+      return;
+    }
+
+    // ตรวจสอบการยอมรับเงื่อนไข
     if (!isChecked) {
-      // ถ้าไม่ติ๊กให้แสดง Alert และหยุดการลงทะเบียน
       Alert.alert('กรุณายอมรับนโยบายความเป็นส่วนตัวและข้อกำหนดการใช้งานของเรา');
       return;
     }
-    auth
-      .createUserWithEmailAndPassword(email, password)
+
+    // ทำการลงทะเบียน
+    setLoading(true);
+    auth.createUserWithEmailAndPassword(email, password)
       .then(userCredentials => {
         const user = userCredentials.user;
-        // console.log('Registered with:', user.email);
-
-        // Add email to Realtime Database
-        // database.ref('emails').push({
-        //   email: email,
-        // });
-
         // เพิ่มข้อมูลลง Firestore
         db.collection("users").doc(user.uid).set({
           firstName: firstName,
@@ -86,80 +122,27 @@ const RegisterPage1 = () => {
           dateOfBirth: dateOfBirth,
           weight: weight,
           height: height,
-
+          phoneNumber: phoneNumber,
         })
           .then(() => {
             console.log('User data added to Firestore');
+            navigation.replace("RegisterPage");
           })
           .catch(error => {
             console.error('Error adding user data to Firestore:', error);
+            Alert.alert('เกิดข้อผิดพลาดในการลงทะเบียน');
+            setLoading(false);
           });
-
-        console.log('Registered with:', user.email);
-        navigation.replace("RegisterPage")
       })
-      .catch(error => alert(error.message));
+      .catch(error => {
+        alert(error.message);
+        setLoading(false);
+      });
   }
 
-  // const handleSignUp = () => {
-  //   if (!isChecked) {
-  //     Alert.alert('กรุณายอมรับนโยบายความเป็นส่วนตัวและข้อกำหนดการใช้งานของเรา');
-  //     return;
-  //   }
-
-  //   auth.createUserWithEmailAndPassword(email, password)
-  //     .then(userCredentials => {
-  //       const user = userCredentials.user;
-
-  //       // Add email to Realtime Database
-  //       realtimeDB.ref('emails').push({
-  //         email: email,
-  //       });
-
-  //       // Add user data to Firestore
-  //       db.collection("users").doc(user.uid).set({
-  //         firstName: firstName,
-  //         lastName: lastName,
-  //         email: email,
-  //         gender: gender,
-  //         dateOfBirth: dateOfBirth,
-  //         weight: weight,
-  //         height: height,
-  //       })
-  //       .then(() => {
-  //         console.log('User data added to Firestore');
-  //       })
-  //       .catch(error => {
-  //         console.error('Error adding user data to Firestore:', error);
-  //       });
-
-  //       console.log('Registered with:', user.email);
-  //       navigation.replace("RegisterPage");
-  //     })
-  //     .catch(error => alert(error.message));
-  // }
 
 
 
-  // const handleSignUp = () => {
-  //   if (email && email.length > 0){
-  //     const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-  //     const data = {
-  //       heading: email,
-  //       createAt: timestamp
-
-  //     };
-  //     todoRef
-  //       .add(data)
-  //       .then(()=>{
-  //         setEmail('');
-  //         Keyboard.dismiss();
-  //       })
-  //       .catch((error)=>{
-  //         Alert(error);
-  //       })
-  //   }
-  // }
 
   return (
     <View style={styles.registerPage1}>
@@ -375,7 +358,7 @@ const RegisterPage1 = () => {
           source={require("../assets/vector-68.png")}
         />
       </View>
-      <TouchableOpacity style={[styles.loginSocialMedia, styles.groupChildLayout]} onPress={() => navigation.navigate("Otp")}>
+      <TouchableOpacity style={[styles.loginSocialMedia, styles.groupChildLayout]} onPress={() => navigation.navigate("OtpLogin")}>
         <View style={[styles.rectangleParent, styles.groupChildLayout]}>
           <View style={[styles.groupChild, styles.groupChildLayout]} />
           <Image

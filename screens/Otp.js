@@ -18,6 +18,8 @@ const Otp = () => {
             );
             setVerificationId(verificationId);
             alert('Verification code has been sent to your phone.');
+            console.log(verificationId)
+            console.log(recaptchaVerifier)
         } catch (error) {
             console.log(error);
             alert('Failed to send verification code. Please try again.');

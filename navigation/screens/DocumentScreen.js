@@ -29,49 +29,78 @@ export default function DocumentScreen() {
     setShowModal(false);
   };
 
+  // useEffect(() => {
+  //   const fetchDevicesAll = async () => {
+  //     try {
+  //       const userDoc = await db.collection('users').doc(auth.currentUser.uid).get();
+  //       if (userDoc.exists) {
+  //         const userData = userDoc.data();
+  //         if (userData && userData.devicesAll) {
+  //           setDevicesAll(userData.devicesAll);
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching devicesAll:', error);
+  //     }
+  //   };
+
+  //   fetchDevicesAll();
+
+  //   const unsubscribe = db.collection('users').doc(auth.currentUser.uid)
+  //     .onSnapshot((doc) => {
+  //       if (doc.exists) {
+  //         const userData = doc.data();
+  //         if (userData && userData.devicesAll) {
+  //           setDevicesAll(userData.devicesAll);
+  //           // Set device status for each device
+  //           const devicesWithStatus = userData.devicesAll.map(device => ({
+  //             ...device,
+  //             statusDevice: device.statusDevice || false, // Set default value to false if statusDevice is not present
+  //             statusDeviceText: device.statusDevice ? 'กำลังใช้งาน' : 'ถูกลบแล้ว' // Set status text based on statusDevice
+  //           }));
+  //           setDevicesAll(devicesWithStatus);
+
+  //         }
+  //       }
+  //     });
+
+  //   // Cleanup function
+  //   return () => {
+  //     unsubscribe();
+  //     // Cleanup code if needed
+  //   };
+  // }, []);
+
   useEffect(() => {
-    const fetchDevicesAll = async () => {
-      try {
-        const userDoc = await db.collection('users').doc(auth.currentUser.uid).get();
-        if (userDoc.exists) {
-          const userData = userDoc.data();
-          if (userData && userData.devicesAll) {
-            setDevicesAll(userData.devicesAll);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching devicesAll:', error);
+    const unsubscribeAuth = firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        const unsubscribe = db.collection('users')
+          .doc(user.uid)
+          .onSnapshot(snapshot => {
+            const userData = snapshot.data();
+            if (userData && userData.devicesAll) {
+              setDevicesAll(userData.devicesAll);
+              const devicesWithStatus = userData.devicesAll.map(device => ({
+                ...device,
+                statusDevice: device.statusDevice || false,
+                statusDeviceText: device.statusDevice ? 'กำลังใช้งาน' : 'ถูกลบแล้ว'
+              }));
+              setDevicesAll(devicesWithStatus);
+            }
+          });
+
+        return () => {
+          unsubscribe();
+        };
+      } else {
+        setDevicesAll([]);
       }
-    };
+    });
 
-    fetchDevicesAll();
-
-    const unsubscribe = db.collection('users').doc(auth.currentUser.uid)
-      .onSnapshot((doc) => {
-        if (doc.exists) {
-          const userData = doc.data();
-          if (userData && userData.devicesAll) {
-            setDevicesAll(userData.devicesAll);
-            // Set device status for each device
-            const devicesWithStatus = userData.devicesAll.map(device => ({
-              ...device,
-              statusDevice: device.statusDevice || false, // Set default value to false if statusDevice is not present
-              statusDeviceText: device.statusDevice ? 'กำลังใช้งาน' : 'ถูกลบแล้ว' // Set status text based on statusDevice
-            }));
-            setDevicesAll(devicesWithStatus);
-
-          }
-        }
-      });
-
-    // Cleanup function
     return () => {
-      unsubscribe();
-      // Cleanup code if needed
+      unsubscribeAuth();
     };
-  }, []);
-
-
+  }, [auth.currentUser]);
 
   return (
     <View style={styles.container}>
@@ -132,7 +161,7 @@ export default function DocumentScreen() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>เลือกกรองอุปกรณ์</Text>
+            <Text style={styles.modalTitle}>เลือกกรองอุปกรณ์</Text>
             <TouchableOpacity onPress={() => handleFilterChange('all')} style={styles.filterButtonContainer}>
               <Text style={styles.filterButtonText}>ทั้งหมด</Text>
             </TouchableOpacity>
@@ -287,6 +316,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#333', // สีข้อความ
   },
-  
+
 
 });
