@@ -5,7 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { firebase } from '../config';
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from '@react-navigation/native';
-const Safety = () => {
+const SafetyPhone = () => {
     const navigation = useNavigation();
     const db = firebase.firestore();
     const auth = firebase.auth();
@@ -47,12 +47,13 @@ const Safety = () => {
         }, [])
     );
 
-    const handleEmailVerification = async () => {
+
+    const confirmAccountDeletion = async () => {
         try {
-            // ให้แสดง Alert เพื่อยืนยันการส่งอีเมล
+            // แสดง Alert เพื่อยืนยันการลบบัญชี
             Alert.alert(
-                "ยืนยันการส่งอีเมลยืนยัน",
-                "คุณต้องการส่งอีเมลยืนยันไปยังอีเมลของคุณหรือไม่?",
+                "ยืนยันการลบบัญชี",
+                "คุณแน่ใจหรือไม่ว่าต้องการลบบัญชี?",
                 [
                     {
                         text: "ยกเลิก",
@@ -61,68 +62,37 @@ const Safety = () => {
                     {
                         text: "ยืนยัน",
                         onPress: async () => {
-                            // ทำการส่งอีเมลยืนยัน
-                            await auth.currentUser.sendEmailVerification();
-                            alert("อีเมลยืนยันถูกส่งไปยังอีเมลของคุณแล้ว");
-                            // รีเฟรชข้อมูลผู้ใช้เพื่ออัปเดตสถานะการยืนยันอีเมล
-                            await auth.currentUser.reload();
-                            setIsEmailVerified(false); // อัปเดตสถานะการยืนยันอีเมล
+                            // ลบบัญชีผู้ใช้
+                            await auth.currentUser.delete();
+
+                            // ค้นหาและลบข้อมูลผู้ใช้จาก Firestore โดยใช้หมายเลขโทรศัพท์
+                            await db.collection("users").where("phoneNumber", "==", phone).get()
+                                .then((querySnapshot) => {
+                                    querySnapshot.forEach((doc) => {
+                                        doc.ref.delete();
+                                    });
+                                });
+
+                            // ปิด Modal หลังจากลบบัญชีเรียบร้อยแล้ว
+                            setModalVisible(false);
+
+                            // แสดงข้อความแจ้งเตือนว่าการลบบัญชีสำเร็จ
+                            alert("บัญชีของคุณได้ถูกลบเรียบร้อยแล้ว");
+
+                            // นำผู้ใช้ไปยังหน้า Login (หรือหน้าที่ต้องการ)
+                            navigation.navigate('LoginPage'); // แก้ไข 'Login' เป็นชื่อของหน้าที่ต้องการให้ไป
                         },
-                    },
+                        style: "destructive"
+                    }
                 ]
             );
-        } catch (error) {
-            alert("เกิดข้อผิดพลาดในการส่งอีเมลยืนยัน");
-            console.error(error);
-        }
-    };
-    
-
-    const handlePasswordChange = () => {
-        // Handle password change functionality here
-        navigation.navigate('ForgotPasswordAct', { email });
-    };
-
-    const handleAccountDeletion = async () => {
-        try {
-            setModalVisible(true); // เปิด Modal เมื่อคลิกที่ปุ่มลบบัญชี
-        } catch (error) {
-            alert("เกิดข้อผิดพลาดในการลบบัญชี");
-            console.error(error);
-        }
-    };
-    
-
-    const confirmAccountDeletion = async () => {
-        try {
-            // ลองเข้าสู่ระบบอีกครั้งเพื่อยืนยันรหัสผ่าน
-            await auth.signInWithEmailAndPassword(email, passwordConfirmation);
-
-            // ลบบัญชีผู้ใช้
-            await auth.currentUser.delete();
-
-            // ลบเอกสารที่มี email ตรงกับข้อมูลที่ถูกลบออกจาก Firestore
-            await db.collection("users").where("email", "==", email).get()
-                .then((querySnapshot) => {
-                    querySnapshot.forEach((doc) => {
-                        doc.ref.delete();
-                    });
-                });
-
-            // ปิด Modal
-            setModalVisible(false);
-
-            // แสดงข้อความแจ้งลบบัญชีสำเร็จ
-            alert("บัญชีของคุณได้ถูกลบเรียบร้อยแล้ว");
-
-            // นำผู้ใช้ไปยังหน้า Login (หรือหน้าที่ต้องการ)
-            navigation.navigate('LoginPage'); // แก้ไข 'Login' เป็นชื่อของหน้าที่ต้องการให้ไป
         } catch (error) {
             // แสดงข้อความแจ้งเตือนเมื่อเกิดข้อผิดพลาดในการลบบัญชี
             alert("เกิดข้อผิดพลาดในการลบบัญชี");
             console.error(error);
         }
     };
+
 
 
     return (
@@ -137,30 +107,15 @@ const Safety = () => {
             <ScrollView contentContainerStyle={styles.contentContainer}>
                 {/* <Text style={styles.sectionTitle}>ข้อมูลส่วนบุคคลที่เราเก็บ</Text> */}
 
-                <TouchableOpacity style={styles.button} onPress={handleEmailVerification}>
-                    <Text style={styles.buttonText}>ยืนยันอีเมล</Text>
-                    <View style={styles.textContainer}>
-                        <Text style={[styles.buttonSubText, styles.text]}> {email} </Text>
-                        <Text style={[styles.verificationText, !isEmailVerified && styles.unverifiedText, styles.text]}>
-                            {isEmailVerified ? "ได้รับการยืนยันแล้ว" : "ยังไม่ยืนยันอีเมล"}
-                        </Text>
-                    </View>
-                </TouchableOpacity>
 
-                {/* <TouchableOpacity style={styles.buttonphone} onPress={handlePhoneLogin}>
+                <TouchableOpacity style={styles.buttonphone}>
                     <Text style={styles.buttonText}>เบอร์โทรศัพท์</Text>
-                    <Text style={styles.buttonText}> {phone}</Text>
-                </TouchableOpacity> */}
-
-                <TouchableOpacity style={styles.button} onPress={handlePasswordChange}>
-                    <Text style={styles.buttonText}>แก้ไขรหัสผ่าน</Text>
+                    <Text style={styles.unverifiedText}> {phone}</Text>
                 </TouchableOpacity>
-                {/* <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={handleAccountDeletion}>
-                    <Text style={[styles.buttonText, styles.deleteButtonText]}>ลบบัญชีการใช้งาน</Text>
-                </TouchableOpacity> */}
+
                 <TouchableOpacity
                     style={[styles.buttondel]}
-                    onPress={handleAccountDeletion}
+                    onPress={confirmAccountDeletion}
                 >
                     <LinearGradient
                         style={[styles.buttonGradient, styles.deleteButtonGradient]}
@@ -174,42 +129,6 @@ const Safety = () => {
                 </TouchableOpacity>
 
             </ScrollView>
-
-            {/* Modal สำหรับการยืนยันการลบบัญชี */}
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.centeredView}>
-                    <View style={styles.modalView}>
-                        <Text style={[styles.modalText, styles.modalHeaderText]}>กรุณาป้อนรหัสผ่านเพื่อยืนยันการลบบัญชี</Text>
-
-                        <TextInput
-                            style={styles.input}
-                            placeholder="รหัสผ่าน"
-                            secureTextEntry
-                            value={passwordConfirmation}
-                            onChangeText={setPasswordConfirmation}
-                        />
-                        <View style={styles.modalButtonContainer}>
-                            <TouchableOpacity
-                                style={styles.cancelButton}
-                                onPress={() => setModalVisible(false)}
-                            >
-                                <Text style={styles.cancelButtonText}>ยกเลิก</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.confirmButton}
-                                onPress={confirmAccountDeletion}
-                            >
-                                <Text style={styles.confirmButtonText}>ยืนยัน</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
 
         </View>
     );
@@ -264,8 +183,8 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         paddingHorizontal: 20,
         marginBottom: 15,
-        flexDirection:'row',
-        justifyContent:'space-between',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
     },
     buttondel: {
         borderRadius: 10,
@@ -299,8 +218,7 @@ const styles = StyleSheet.create({
     unverifiedText: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#FF9100', // เปลี่ยนเป็นสีส้ม
-        marginTop: 10,
+        color: 'green', // เปลี่ยนเป็นสีส้ม
     },
     // สไตล์สำหรับ Modal
     input: {
@@ -311,7 +229,7 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         marginBottom: 10,
         paddingHorizontal: 10,
-        backgroundColor:'#F7F8F8'
+        backgroundColor: '#F7F8F8'
     },
     centeredView: {
         flex: 1,
@@ -344,7 +262,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         color: '#333', // เปลี่ยนสีข้อความให้ตรงกับที่ต้องการ
     },
-    
+
     modalButtonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -388,4 +306,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default Safety;
+export default SafetyPhone;

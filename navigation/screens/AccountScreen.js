@@ -72,7 +72,6 @@ export default function AccountScreen({ }) {
         }, [])
     );
 
-
     const calculateAge = (dateOfBirth) => {
         const birthDate = new Date(dateOfBirth.seconds * 1000);
         const currentDate = new Date();
@@ -216,7 +215,21 @@ export default function AccountScreen({ }) {
                                 source={require("../../assets/iconarrow.png")}
                             />
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.achievement, styles.iconProfileLayout]} onPress={() => navigation.navigate("Safety")}>
+                        <TouchableOpacity
+                            style={[styles.achievement, styles.iconProfileLayout]}
+                            onPress={() => {
+                                if (auth.currentUser.email) {
+                                    // ถ้ามีอีเมล ให้ไปที่หน้า Safety
+                                    navigation.navigate("Safety");
+                                } else if (auth.currentUser.phoneNumber) {
+                                    // ถ้ามีหมายเลขโทรศัพท์ ให้ไปที่หน้า SafetyPhone
+                                    navigation.navigate("SafetyPhone");
+                                } else {
+                                    // กรณีที่ไม่มีข้อมูลอีเมลหรือหมายเลขโทรศัพท์ (ไม่ควรเข้าสู่กรณีนี้)
+                                    alert("ไม่สามารถระบุประเภทผู้ใช้ได้");
+                                }
+                            }}
+                        >
                             <Image
                                 style={[styles.iconProfile, styles.iconProfileLayout]}
                                 contentFit="cover"

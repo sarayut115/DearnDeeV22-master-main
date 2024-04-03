@@ -29,6 +29,7 @@ import SettingDevice from "./LoggedIn/SettingDevice";
 import Otp from "./screens/Otp";
 import OtpLogin from "./screens/OtpLogin";
 import OtpSMS from "./screens/OtpSMS";
+import SafetyPhone from "./LoggedIn/SafetyPhone";
 // import LiquidFillGauge from "./compo/LiquidFillGauge";
 
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -72,7 +73,8 @@ const App = () => {
               options={{ headerShown: false }}
             />
           ) : null}
-          <Stack.Screen name="WelcomeScreen" component={LoginPage} />
+          <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
+          <Stack.Screen name="SafetyPhone" component={SafetyPhone} />
           <Stack.Screen name="OtpSMS" component={OtpSMS} />
           <Stack.Screen name="OtpLogin" component={OtpLogin} />
           <Stack.Screen name="Otp" component={Otp} />
