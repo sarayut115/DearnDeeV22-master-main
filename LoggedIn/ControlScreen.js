@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, FlatList, ScrollView, Modal } from "react-native";
+import { StyleSheet, View, Text, TouchableOpacity, FlatList, ScrollView, Modal, Animated } from "react-native";
 import Slider from '@react-native-community/slider';
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -51,6 +51,9 @@ const ControlScreen = ({ route }) => {
     const [deviceStatus, setDeviceStatus] = useState(false);
 
     const [showModal, setShowModal] = useState(false);
+
+    const [trigger, setTrigger] = useState(0);
+    const [stimtrigger, setStimtrigger] = useState(false);
 
 
     useFocusEffect(
@@ -102,6 +105,37 @@ const ControlScreen = ({ route }) => {
     const goBack = () => {
         navigation.goBack();
     };
+
+    useEffect(() => {
+        const checkDeviceStatus = () => {
+            try {
+                const deviceStatusRef = realtimeDB.ref('/test/trigger');
+                deviceStatusRef.on('value', (snapshot) => {
+                    const value = snapshot.val();
+                    if (value === 1) {
+                        setTrigger(1);
+                        setStimtrigger(true)
+
+                    } else if (value === 0) {
+                        setTrigger(0);
+                        setStimtrigger(false)
+                    }
+
+                });
+            } catch (error) {
+                console.error('Error fetching device status:', error);
+            }
+            console.log(trigger, 'trigger')
+        };
+
+        checkDeviceStatus();
+
+        // อย่าลืมใช้ return function เพื่อยกเลิกการสมัครฟังเหตุการณ์เมื่อ Component ถูก unmount
+        return () => {
+            realtimeDB.ref('/test/trigger').off(); // ยกเลิกการสมัครฟังเหตุการณ์เมื่อ Component ถูก unmount
+        };
+    }, []);
+
 
     useEffect(() => {
         const checkDeviceStatus = () => {
@@ -324,60 +358,60 @@ const ControlScreen = ({ route }) => {
             console.error('Error saving button state to AsyncStorage:', error);
         }
 
-        let intensityLevel = 3; 
-        let frequency = 20; 
-        let pulseup = 500; 
-        let rampup = 5; 
+        let intensityLevel = 3;
+        let frequency = 20;
+        let pulseup = 500;
+        let rampup = 5;
 
         // ตรวจสอบเพศและอายุของผู้ใช้
         if (gender === 'ชาย' && age >= 18 && age <= 50) {
-            intensityLevel = 4; 
+            intensityLevel = 4;
         } else if (gender === 'หญิง' && age >= 18 && age <= 50) {
-            intensityLevel = 3; 
+            intensityLevel = 3;
         }
 
-        
+
         const bmi = weight / ((height / 100) * (height / 100));
 
-        
+
         if (age <= 12) {
             // ไม่ได้นำอายุมาคำนวณ BMI ในกรณีนี้ เพราะความแตกต่างของโครงสร้างร่างกายของเด็ก
             // จะมีการปรับค่าพารามิเตอร์ตามอายุและพัฒนาการแต่ละช่วงโดยไม่ใช้ BMI
         } else if (age >= 13) {
             if (bmi < 18.5) {
                 // น้ำหนักน้อยกว่าเกณฑ์มาตรฐาน (ผอม)
-                
-                intensityLevel = 2; 
-                frequency = 30; 
+
+                intensityLevel = 2;
+                frequency = 30;
                 pulseup = 300;
-                rampup = 3; 
+                rampup = 3;
             } else if (bmi >= 18.5 && bmi < 25) {
                 // น้ำหนักอยู่ในเกณฑ์มาตรฐาน (ปกติ)
                 // ปรับค่าพารามิเตอร์ตามความต้องการของผู้ใช้
 
-                
-                intensityLevel = 3; 
+
+                intensityLevel = 3;
                 frequency = 30;
-                pulseup = 400; 
+                pulseup = 400;
                 rampup = 4;
             } else if (bmi >= 25 && bmi < 30) {
                 // น้ำหนักเกินเกณฑ์มาตรฐาน (ท้วม)
                 // ปรับค่าพารามิเตอร์ตามความต้องการของผู้ใช้
 
                 // เช่น ปรับความแรง, ความถี่, Pulseup, Rampup ตามเงื่อนไขที่ต้องการ
-                intensityLevel = 4; 
+                intensityLevel = 4;
                 frequency = 25;
                 pulseup = 300;
-                rampup = 5; 
+                rampup = 5;
             } else if (bmi >= 30) {
                 // น้ำหนักอยู่ในเกณฑ์อ้วน
                 // ปรับค่าพารามิเตอร์ตามความต้องการของผู้ใช้
 
-               
-                intensityLevel = 5; 
-                frequency = 20; 
-                pulseup = 200; 
-                rampup = 5; 
+
+                intensityLevel = 5;
+                frequency = 20;
+                pulseup = 200;
+                rampup = 5;
             }
         }
 
@@ -387,10 +421,10 @@ const ControlScreen = ({ route }) => {
         setSliderValuePulse(pulseup);
         setValueRamp(rampup);
         // Update Firebase Realtime Database
-        realtimeDB.ref('test/intensity').set(intensityLevel); 
-        realtimeDB.ref('test/frequency').set(frequency); 
-        realtimeDB.ref('test/pluseup').set(pulseup); 
-        realtimeDB.ref('test/rampup').set(rampup); 
+        realtimeDB.ref('test/intensity').set(intensityLevel);
+        realtimeDB.ref('test/frequency').set(frequency);
+        realtimeDB.ref('test/pluseup').set(pulseup);
+        realtimeDB.ref('test/rampup').set(rampup);
         realtimeDB.ref('test/Mode').set(2);
     };
 
@@ -499,6 +533,35 @@ const ControlScreen = ({ route }) => {
         }
     }, [isOn, realtimeDB]);  // เพิ่ม isOn เข้าไปใน dependency array ของ useEffect เพื่อให้ useEffect ทำงานเมื่อมีการเปลี่ยนแปลงค่า isOn
 
+    // useEffect(() => {
+    //     if (isOn) {
+    //         const dbRef = realtimeDB.ref('test/intensity');
+    //         const onDataChange = (snapshot) => {
+    //             const intensityValue = snapshot.val();
+    //             if (intensityValue !== null) {
+    //                 setValue(intensityValue);
+    //             }
+    //         };
+    
+    //         dbRef.on('value', onDataChange);
+    
+    //         return () => {
+    //             dbRef.off('value', onDataChange);
+    //         };
+    //     } else {
+    //         // หาก isOn เป็น false และค่าใน Firebase เป็น 0
+    //         const dbRef = realtimeDB.ref('test/intensity');
+    //         dbRef.once('value', (snapshot) => {
+    //             const intensityValue = snapshot.val();
+    //             if (intensityValue === 0) {
+    //                 setIsOn(false)
+    //                 // ดำเนินการดึงค่ามาทำอะไรต่อได้ตรงนี้
+    //                 // ตัวอย่าง: console.log('ค่าใน Firebase เป็น 0');
+    //             }
+    //         });
+    //     }
+    // }, [isOn, realtimeDB]);
+    
 
     useEffect(() => {
         // เมื่อค่า isOn เปลี่ยนและมีค่าเป็น true
@@ -573,6 +636,7 @@ const ControlScreen = ({ route }) => {
                 // อัปเดตค่า mode ลงใน Firebase Realtime Database
                 await userDocRef.update({ devicesAll: updatedDevicesAll });
                 realtimeDB.ref('test/Mode').set(mode);
+                realtimeDB.ref('test/intensity').set(0);
 
                 console.log("History updated successfully!");
             }
@@ -728,7 +792,7 @@ const ControlScreen = ({ route }) => {
                 </View>
                 <View style={[styles.homesceen1Inner, styles.homesceen1Layout, { justifyContent: 'center', alignItems: 'center' }]} >
 
-                    <Text style={[styles.text, { alignSelf: 'flex-start', fontSize: 18, fontWeight: 'bold', marginLeft: 10, marginTop: 4 }]}>ปรับ RampUP {' '}
+                    <Text style={[styles.text, { alignSelf: 'flex-start', fontSize: 18, fontWeight: 'bold', marginLeft: 10, marginTop: 4 }]}>ปรับความ Smooth {' '}
                         {isVectorActive && <FontAwesome name="lock" size={22} />}
                         {isMaterialSymbolshdrAutoActive && <FontAwesome name="lock" size={22} />}
 
@@ -744,7 +808,7 @@ const ControlScreen = ({ route }) => {
 
 
                 <View style={[styles.homesceen2Inner, styles.homesceen1Layout, { justifyContent: 'center', alignItems: 'center' }]} >
-                    <Text style={[styles.text, { alignSelf: 'flex-start', fontSize: 18, fontWeight: 'bold', marginLeft: 10, marginTop: 4 }]}>ปรับ PulseUp {' '}
+                    <Text style={[styles.text, { alignSelf: 'flex-start', fontSize: 18, fontWeight: 'bold', marginLeft: 10, marginTop: 4 }]}>ปรับ Pulse {' '}
                         {isVectorActive && <FontAwesome name="lock" size={22} />}
                         {isMaterialSymbolshdrAutoActive && <FontAwesome name="lock" size={22} />}
                     </Text>
@@ -808,12 +872,31 @@ const ControlScreen = ({ route }) => {
                                 colors={["#92a3fd", "#9dceff"]}
                             />
                         </View>
-                        <View style={styles.workoutScheduleTextAA}>
-                            <Text style={[styles.todayTargetAA, styles.textPositionAA]}>
-                                อีกประมาณ
-                            </Text>
-                        </View>
-                        <View style={styles.buttonCheckAA}>
+
+                        {!isVectorActive && (
+                            <View style={styles.workoutScheduleTextAA}>
+                                {/* <Text style={[styles.todayTargetAA, styles.textPositionAA]}>
+                                สั่งกระตุ้นแล้ว
+                            </Text> */}
+                                {/* <Text style={[styles.todayTargetAA, styles.textPositionStim, trigger === 0 ? styles.orangeText : styles.greenText]}>
+                                    {trigger === 0 ? "ยังไม่กระตุ้น" : "สั่งกระตุ้นแล้ว"}
+                                </Text> */}
+                                <Text style={[styles.todayTargetAA, styles.textPositionStim, trigger === 0 ? styles.orangeText : styles.greenText]}>
+                                    {trigger === 0 ? "ยังไม่กระตุ้น" : "สั่งกระตุ้นแล้ว"}
+                                </Text>
+
+                            </View>
+                        )}
+
+                        {isVectorActive && (
+                            <View style={styles.workoutScheduleTextAA}>
+                                <Text style={[styles.todayTargetAA, styles.textPositionStim,styles.greenText]}>
+                                    กำลังทำงาน
+                                </Text>
+                            </View>
+                        )}
+
+                        {/* <View style={styles.buttonCheckAA}>
                             <View style={[styles.scheduleBgAA, styles.scheduleChildPositionAA]}>
                                 <LinearGradient
                                     style={[styles.buttonBgChildAA, styles.buttonLayoutAA]}
@@ -825,7 +908,7 @@ const ControlScreen = ({ route }) => {
                                 <Text style={[styles.checkAA, styles.checkClrAA]}>1 ชม.</Text>
                             </View>
 
-                        </View>
+                        </View> */}
                     </View>
                     <View style={styles.actionSensor}>
                         <View style={[styles.scheduleBgAA, styles.scheduleChildPositionAA]}>
@@ -835,24 +918,34 @@ const ControlScreen = ({ route }) => {
                                 colors={["#92a3fd", "#9dceff"]}
                             />
                         </View>
-                        <View style={styles.workoutScheduleTextAA}>
-                            <Text style={[styles.todayTargetAA, styles.textPositionAA]}>
-                                อีกประมาณ
-                            </Text>
-                        </View>
-                        <View style={styles.buttonCheckAA}>
-                            <View style={[styles.scheduleBgAA, styles.scheduleChildPositionAA]}>
-                                <LinearGradient
-                                    style={[styles.buttonBgChildAA, styles.buttonLayoutAA]}
-                                    locations={[0, 1]}
-                                    colors={["#92a3fd", "#9dceff"]}
-                                />
+                        {!isVectorActive && (
+                            <View style={styles.workoutScheduleTextAA}>
+                                <Text style={[styles.todayTargetAA, styles.textPositionble]}>
+                                    ส่งค่า BLE
+                                </Text>
                             </View>
-                            <View style={styles.buttonTextAA}>
-                                <Text style={[styles.checkAA, styles.checkClrAA]}>1 ชม.</Text>
+                        )}
+                        {!isVectorActive && (
+                            <View style={styles.buttonCheckAA}>
+                                <View style={[styles.scheduleBgAA, styles.scheduleChildPositionAA]}>
+                                    <LinearGradient
+                                        style={[styles.buttonBgChildAA, styles.buttonLayoutAA]}
+                                        locations={[0, 1]}
+                                        colors={["#92a3fd", "#9dceff"]}
+                                    />
+                                </View>
+                                <View style={styles.buttonTextAA}>
+                                    <Text style={[styles.checkAA, styles.checkClrAA]}>{trigger}</Text>
+                                </View>
                             </View>
-
-                        </View>
+                        )}
+                        {isVectorActive && (
+                            <View style={styles.workoutScheduleTextAA}>
+                                <Text style={[styles.todayTargetvector, styles.textPositionvector]}>
+                                    กำลังใช้โหมดผ่อนคลาย
+                                </Text>
+                            </View>
+                        )}
 
                     </View>
                     {/* <LinearGradient
@@ -1425,6 +1518,27 @@ const styles = StyleSheet.create({
         top: "0%",
         position: "absolute",
     },
+    textPositionvector: {
+        textAlign: "left",
+        color: Color.blackColor,
+        left: "0%",
+        top: "10%",
+        position: "absolute",
+    },
+    textPositionStim: {
+        textAlign: "center",
+        color: Color.blackColor,
+        left: "17%",
+        top: "0%",
+        position: "absolute",
+    },
+    textPositionble: {
+        textAlign: "left",
+        color: Color.blackColor,
+        left: "7%",
+        top: "0%",
+        position: "absolute",
+    },
     buttonLayoutAA: {
         borderRadius: 15,
         backgroundColor: Color.waterIntakeLinear,
@@ -1466,7 +1580,7 @@ const styles = StyleSheet.create({
         top: "39.76%",
         right: "29.16%",
         bottom: "39.76%",
-        left: "32%", // ปรับค่า left ลงเพื่อขยับไปทางซ้ายจอ
+        left: "35%", // ปรับค่า left ลงเพื่อขยับไปทางซ้ายจอ
         position: "absolute",
     },
 
@@ -1530,10 +1644,17 @@ const styles = StyleSheet.create({
         fontWeight: "500",
         fontFamily: FontFamily.textSmallTextMedium,
         fontSize: FontSize.textMediumTextRegular_size,
+
+    },
+    todayTargetvector: {
+        fontWeight: "500",
+        fontFamily: FontFamily.textSmallTextMedium,
+        fontSize: FontSize.textSmallTextRegular_size,
+
     },
     workoutScheduleTextAA: {
         height: "36.84%",
-        width: "47%",
+        width: "85%",
         top: "31.58%",
         right: "37.79%",
         bottom: "31.58%",
@@ -1559,13 +1680,13 @@ const styles = StyleSheet.create({
     },
     buttonTextAA: {
         height: "64.29%",
-        width: "60%",
+        width: "20%",
         top: "17.86%",
         right: "40.78%",
         bottom: "17.86%",
-        left: "22.02%",
+        left: "40.02%",
         position: "absolute",
-        // backgroundColor:'red'
+        // backgroundColor:'red',
     },
     buttonCheckAA: {
         height: "49.12%",
@@ -1676,6 +1797,12 @@ const styles = StyleSheet.create({
     statusText: {
         fontSize: 16,
         top: 5, // เพิ่มระยะห่างระหว่างชื่ออุปกรณ์กับสถานะ
+    },
+    orangeText: {
+        color: 'black',
+    },
+    greenText: {
+        color: 'green',
     },
 });
 
