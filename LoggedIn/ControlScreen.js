@@ -881,8 +881,8 @@ const ControlScreen = ({ route }) => {
                                 {/* <Text style={[styles.todayTargetAA, styles.textPositionStim, trigger === 0 ? styles.orangeText : styles.greenText]}>
                                     {trigger === 0 ? "ยังไม่กระตุ้น" : "สั่งกระตุ้นแล้ว"}
                                 </Text> */}
-                                <Text style={[styles.todayTargetAA, styles.textPositionStim, trigger === 0 ? styles.orangeText : styles.greenText]}>
-                                    {trigger === 0 ? "ยังไม่กระตุ้น" : "สั่งกระตุ้นแล้ว"}
+                                <Text style={[styles.todayTargetAA, styles.textPositionStim, trigger === 1 ? styles.orangeText : styles.greenText]}>
+                                    {trigger === 1 ? "ยังไม่กระตุ้น" : "สั่งกระตุ้นแล้ว"}
                                 </Text>
 
                             </View>
